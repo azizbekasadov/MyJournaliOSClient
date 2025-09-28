@@ -6,7 +6,7 @@
 //
 
 #import "SceneDelegate.h"
-#import "PostsFeedViewController.h"
+#import "AppCoordinator.h"
 
 @interface SceneDelegate ()
 
@@ -17,12 +17,9 @@
 
 - (void)scene:(UIScene *)scene willConnectToSession:(UISceneSession *)session options:(UISceneConnectionOptions *)connectionOptions {
     
-    self.window = [[UIWindow alloc] initWithWindowScene:(UIWindowScene *) scene];
-    
-    PostsFeedViewController* rootViewController = [[PostsFeedViewController alloc] init];
-    
-    self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:rootViewController];
-    [self.window makeKeyAndVisible];
+    UIWindowScene* windowScene = [[UIWindowScene alloc] initWithSession:session connectionOptions:connectionOptions];
+    _coordinator = [[AppCoordinator alloc] initWithWindowScene:windowScene];
+    [_coordinator start];
 }
 
 @end

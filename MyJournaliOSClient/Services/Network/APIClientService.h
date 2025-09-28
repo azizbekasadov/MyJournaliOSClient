@@ -16,10 +16,10 @@ typedef void (^ErrorPronePostCompletionHandler)(NSError* _Nullable error);
 
 @interface APIClientService : NSObject
 
-+(instancetype) sharedInstance;
--(instancetype) initWithSession:(NSURLSession *)session NS_DESIGNATED_INITIALIZER;
--(instancetype) init NS_UNAVAILABLE;
-+(instancetype) new NS_UNAVAILABLE;
++ (instancetype) sharedInstance;
+- (instancetype) initWithSession:(NSURLSession *)session NS_DESIGNATED_INITIALIZER;
+- (instancetype) init NS_UNAVAILABLE;
++ (instancetype) new NS_UNAVAILABLE;
 
 - (void) fetchPosts:(FetchPostsCompletionHandler) completion;
 - (void) createPost:(NSString*) title withPostBody: (NSString*) body withCompletionHandler:(ErrorPronePostCompletionHandler) completion;
