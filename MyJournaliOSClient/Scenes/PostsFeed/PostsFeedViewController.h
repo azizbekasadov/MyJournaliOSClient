@@ -9,6 +9,7 @@
 @import UIKit;
 
 @class Post;
+@class APIClientService;
 
 @interface PostsFeedViewController : UITableViewController
 

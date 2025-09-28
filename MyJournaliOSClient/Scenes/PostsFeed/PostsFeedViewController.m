@@ -5,8 +5,9 @@
 //  Created by Azizbek Asadov on 27.09.2025.
 //
 
-#import "PostsFeedViewController.h"
 #import "Post.h"
+#import "APIClientService.h"
+#import "PostsFeedViewController.h"
 
 @interface PostsFeedViewController()
 
@@ -31,7 +32,9 @@
     };
     
     Post* sampleObj = [[Post alloc] initWithDictionary:sampleDict];
-    _posts = [_posts arrayByAddingObject:sampleObj];
+    
+//    Used for initial setup
+//    _posts = [_posts arrayByAddingObject:sampleObj];
     
     [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:self.cellid];
     
@@ -43,12 +46,52 @@
     [self.tableView reloadData];
 }
 
+- (void)viewIsAppearing:(BOOL)animated {
+    [super viewIsAppearing: animated];
+    
+    [self fetchPosts];
+}
+
 -(void) handleCreatePostAction {
     
 }
 
+-(void) showErrorAlert {
+    UIAlertController * alertController = [[UIAlertController alloc] init];
+    alertController.title = @"Oops! Something went wrong";
+    
+    UIAlertAction* dismissAction = [UIAlertAction actionWithTitle:@"Something went wrong!" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+        // DO nothing
+    }];
+    
+    [alertController addAction:dismissAction];
+    [self presentViewController:alertController animated:YES completion:NULL];
+}
+
 -(void) fetchPosts {
-//    [APIClientService.sharedInstance() fetchPosts];
+    __weak typeof(self) weakSelf = self;
+    
+    [APIClientService.sharedInstance fetchPosts:^(NSArray<Post *> * _Nullable posts, NSError * _Nullable error) {
+        __strong typeof(self) strongSelf = weakSelf;
+        
+        if (!strongSelf) {
+            NSLog(@"Strong Self Does not Exist");
+            [self showErrorAlert];
+            return;
+        }
+        
+        if (error) {
+            [self showErrorAlert];
+            return;
+        }
+        
+        if (posts) {
+            NSLog(@"@%@", posts);
+            weakSelf.posts = posts;
+            [weakSelf.tableView reloadData];
+            return;
+        }
+    }];
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {

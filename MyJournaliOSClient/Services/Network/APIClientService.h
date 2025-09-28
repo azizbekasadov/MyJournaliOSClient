@@ -11,11 +11,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef void (^FetchPostsCompletionHandler)(NSArray<Post*>* _Nullable posts, NSError* _Nullable);
+typedef void (^FetchPostsCompletionHandler)(NSArray<Post*>* _Nullable posts, NSError* _Nullable error);
 
 @interface APIClientService : NSObject
 
--(instancetype) sharedInstance;
++(instancetype) sharedInstance;
 -(instancetype) initWithSession:(NSURLSession *)session NS_DESIGNATED_INITIALIZER;
 -(instancetype) init NS_UNAVAILABLE;
 +(instancetype) new NS_UNAVAILABLE;
