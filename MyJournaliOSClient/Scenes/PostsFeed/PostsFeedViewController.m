@@ -183,7 +183,7 @@
     }];
 }
 
-#pragma MARK: - UITableView methods
+#pragma mark: - UITableView methods
 
 - (void)tableView:(UITableView *)tableView
         didSelectRowAtIndexPath:(NSIndexPath *)indexPath {

@@ -220,7 +220,7 @@ NS_ASSUME_NONNULL_BEGIN
     }
 }
 
-#pragma MARK: - Helpers
+#pragma mark: - Helpers
 - (NSError*) configureErrorWithCode: (APIClientErrorCode) code
                           inDomain:(NSErrorDomain) domain {
     NSError* error = [NSError errorWithDomain:domain
