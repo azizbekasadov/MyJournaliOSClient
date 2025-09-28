@@ -1,5 +1,5 @@
 //
-//  PostsFeedViewController.h
+//  AppDelegate.h
 //  MyJournaliOSClient
 //
 //  Created by Azizbek Asadov on 27.09.2025.
@@ -8,8 +8,8 @@
 @import Foundation;
 @import UIKit;
 
-@class Post;
+@interface AppDelegate : UIResponder <UIApplicationDelegate>
 
-@interface PostsFeedViewController : UITableViewController
 
 @end
+

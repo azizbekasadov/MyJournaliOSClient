@@ -5,7 +5,9 @@
 //  Created by Azizbek Asadov on 27.09.2025.
 //
 
-#import <XCTest/XCTest.h>
+@import Foundation;
+@import UIKit;
+@import XCTest;
 
 @interface MyJournaliOSClientUITests : XCTestCase
 
