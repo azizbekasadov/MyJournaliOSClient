@@ -11,7 +11,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation Post
 
--(instancetype) initWithDictionary:(NSDictionary *) dict {
+- (instancetype) initWithDictionary:(NSDictionary *) dict {
     self = [super init];
     
     if (self) {

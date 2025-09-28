@@ -12,6 +12,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef void (^FetchPostsCompletionHandler)(NSArray<Post*>* _Nullable posts, NSError* _Nullable error);
+typedef void (^ErrorPronePostCompletionHandler)(NSError* _Nullable error);
 
 @interface APIClientService : NSObject
 
@@ -20,7 +21,9 @@ typedef void (^FetchPostsCompletionHandler)(NSArray<Post*>* _Nullable posts, NSE
 -(instancetype) init NS_UNAVAILABLE;
 +(instancetype) new NS_UNAVAILABLE;
 
-- (void)fetchPosts:(FetchPostsCompletionHandler)completion;
+- (void) fetchPosts:(FetchPostsCompletionHandler) completion;
+- (void) createPost:(NSString*) title withPostBody: (NSString*) body withCompletionHandler:(ErrorPronePostCompletionHandler) completion;
+- (void) deletePostWithPostId:(NSInteger) postId withCompletionHandler:(ErrorPronePostCompletionHandler) completion;;
 
 @end
 

@@ -9,6 +9,7 @@
 #import "APIClientService.h"
 #import "APIClientServiceErrorDomain.h"
 #import "APIClientServiceError.h"
+#import "JRHTTPMethod.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -20,7 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation APIClientService
 
-+(instancetype) sharedInstance {
++ (instancetype) sharedInstance {
     static APIClientService* shared;
     static dispatch_once_t onceDispatchToken;
     
@@ -41,7 +42,73 @@ NS_ASSUME_NONNULL_BEGIN
     return self;
 }
 
--(void)fetchPosts:(FetchPostsCompletionHandler)completion {
+
+- (void) createPost:(NSString*) title
+       withPostBody: (NSString*) body
+        withCompletionHandler:(ErrorPronePostCompletionHandler) completion {
+    NSURL* url = [[NSURL alloc] initWithString:@"http://localhost:1337/post"];
+    
+    if (url) {
+        if (_session) {
+            NSMutableURLRequest* urlRequest = [[NSMutableURLRequest alloc] initWithURL:url];
+            urlRequest.HTTPMethod = (JRHTTPMethod) POST;
+            
+            NSDictionary* dict = @{
+                @"title": title,
+                @"postBody": body,
+            };
+            
+            NSError* jsonError;
+            NSData* serializedData = [NSJSONSerialization dataWithJSONObject:dict options:0 error:&jsonError];
+            
+            if (jsonError || [jsonError isKindOfClass:[NSData class]]) {
+                return dispatch_async(dispatch_get_main_queue(), ^{
+                    completion(jsonError ?: [self configureErrorWithCode:APICodeDecodingFailed inDomain:APIClientErrorDomain]);
+                });
+            }
+            
+            urlRequest.HTTPBody = serializedData;
+            [urlRequest setValue:@"application/json" forHTTPHeaderField:@"content-type"];
+            
+            NSURLSessionDataTask* task = [_session dataTaskWithRequest:urlRequest
+                                                     completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+                if (error) {
+                    NSLog(@"@%@", error.localizedDescription);
+                    
+                    return dispatch_async(dispatch_get_main_queue(), ^{
+                        completion(error);
+                    });
+                }
+                
+                if (data) {
+                    NSLog(@"All Good - Post was created");
+                    return dispatch_async(dispatch_get_main_queue(), ^{
+                        completion(nil);
+                    });
+                } else {
+                    NSError *error = [self configureErrorWithCode:APICodeCorruptDataResponse inDomain:APIClientErrorDomain];
+                    return dispatch_async(dispatch_get_main_queue(), ^{
+                        completion(error);
+                    });
+                }
+            }];
+            
+            [task resume];
+        } else {
+            NSError *error = [self configureErrorWithCode:APICodeSessionIsNotConfigured inDomain:APIClientErrorDomain];
+            return dispatch_async(dispatch_get_main_queue(), ^{
+                completion(error);
+            });
+        }
+    } else {
+        NSError* error = [self configureErrorWithCode:APICodeInvalidURL inDomain:APIClientErrorDomain];
+        return dispatch_async(dispatch_get_main_queue(), ^{
+            completion(error);
+        });
+    }
+}
+
+- (void)fetchPosts:(FetchPostsCompletionHandler)completion {
     NSURL* url = [[NSURL alloc] initWithString:@"http://localhost:1337/posts"];
     
     if (url) {
@@ -49,7 +116,6 @@ NS_ASSUME_NONNULL_BEGIN
             NSURLSessionDataTask* task = [_session dataTaskWithURL:url completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
                 
                 if (error) {
-                    
                     NSLog(@"@%@", error.localizedDescription);
                     
                     return dispatch_async(dispatch_get_main_queue(), ^{
@@ -100,8 +166,62 @@ NS_ASSUME_NONNULL_BEGIN
     }
 }
 
+- (void)deletePostWithPostId:(NSInteger) postId withCompletionHandler:(ErrorPronePostCompletionHandler) completion; {
+    NSNumber* postIdNumber = [[NSNumber alloc] initWithInteger:postId];
+    NSString* postIdString = postIdNumber.stringValue;
+    NSString* urlString = [@"http://localhost:1337/post/" stringByAppendingString:postIdString];
+    
+    NSURL* url = [[NSURL alloc] initWithString:urlString];
+    
+    if (url) {
+        NSMutableURLRequest* urlRequest = [[NSMutableURLRequest alloc] initWithURL:url];
+        urlRequest.HTTPMethod = (JRHTTPMethod) DELETE;
+        
+        NSURLSessionDataTask* task = [_session dataTaskWithRequest:urlRequest
+                                      completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+            if (error) {
+                NSLog(@"@%@", error.localizedDescription);
+                
+                return dispatch_async(dispatch_get_main_queue(), ^{
+                    completion(error);
+                });
+            }
+            
+            NSHTTPURLResponse* __response = (NSHTTPURLResponse*) response;
+            
+            if (__response.statusCode == 200) {
+                if (data) {
+                    NSString* logMessage = [@"Post with id" stringByAppendingString:postIdString];
+                    NSLog(@"%@", logMessage);
+                    
+                    return dispatch_async(dispatch_get_main_queue(), ^{
+                        completion(nil);
+                    });
+                } else {
+                    NSError *error = [self configureErrorWithCode:APICodeCorruptDataResponse inDomain:APIClientErrorDomain];
+                    return dispatch_async(dispatch_get_main_queue(), ^{
+                        completion(error);
+                    });
+                }
+            } else {
+                NSError *error = [self configureErrorWithCode:APICodeInvalidResponse inDomain:APIClientErrorDomain];
+                return dispatch_async(dispatch_get_main_queue(), ^{
+                    completion(error);
+                });
+            }
+        }];
+        
+        [task resume];
+    } else {
+        NSError* error = [self configureErrorWithCode:APICodeInvalidURL inDomain:APIClientErrorDomain];
+        return dispatch_async(dispatch_get_main_queue(), ^{
+            completion(error);
+        });
+    }
+}
+
 #pragma MARK: - Helpers
--(NSError*) configureErrorWithCode: (APIClientErrorCode) code
+- (NSError*) configureErrorWithCode: (APIClientErrorCode) code
                           inDomain:(NSErrorDomain) domain {
     NSError* error = [NSError errorWithDomain:domain
                                          code:code
