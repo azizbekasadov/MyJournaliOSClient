@@ -28,7 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 - (void) start {
-    PostsFeedViewController* rootViewController = [[PostsFeedViewController alloc] init];
+    PostsFeedViewController* rootViewController = [[PostsFeedViewController alloc] initWithCoordinator:self];
     
     _navigationController = [[UINavigationController alloc] initWithRootViewController:rootViewController];
     self.window.rootViewController = _navigationController;

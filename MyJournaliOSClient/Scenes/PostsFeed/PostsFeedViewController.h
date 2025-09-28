@@ -10,7 +10,12 @@
 
 @class Post;
 @class APIClientService;
+@class AppCoordinator;
 
 @interface PostsFeedViewController : UITableViewController
+
+@property (nonatomic, weak) AppCoordinator* coordinator;
+
+- (instancetype) initWithCoordinator: (AppCoordinator*) coordinator;
 
 @end

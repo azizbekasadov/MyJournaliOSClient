@@ -6,6 +6,7 @@
 //
 
 #import "Post.h"
+#import "AppCoordinator.h"
 #import "APIClientService.h"
 #import "PostsFeedViewController.h"
 
@@ -14,27 +15,27 @@
 @property (nonatomic, copy) NSString* cellid;
 @property (nonatomic, copy) NSArray<Post*>* posts;
 
--(void) handleCreatePostActionWithTitle:(NSString*) title withPostBody: (NSString*) postBody;
--(void) presentPostAlert;
--(void) fetchPosts;
+- (void) handleCreatePostActionWithTitle:(NSString*) title withPostBody: (NSString*) postBody;
+- (void) presentPostAlert;
+- (void) fetchPosts;
 
 @end
 
 @implementation PostsFeedViewController
 
+- (instancetype) initWithCoordinator: (AppCoordinator*) coordinator {
+    self = [super init];
+    
+    if (self) {
+        _coordinator = coordinator;
+    }
+    
+    return self;
+}
+
 - (void)viewDidLoad {
     _cellid = @"cellid";
     _posts = [[NSArray alloc] init];
-    
-    
-//    Used for initial setup
-//    NSDictionary* sampleDict = @{
-//        @"id": @1,
-//        @"title": @"Hello World!",
-//        @"body": @"Sample body"
-//    };
-//    Post* sampleObj = [[Post alloc] initWithDictionary:sampleDict];
-//    _posts = [_posts arrayByAddingObject:sampleObj];
     
     [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:self.cellid];
     

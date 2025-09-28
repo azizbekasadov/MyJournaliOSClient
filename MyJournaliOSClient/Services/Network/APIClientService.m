@@ -10,6 +10,7 @@
 #import "APIClientServiceErrorDomain.h"
 #import "APIClientServiceError.h"
 #import "JRHTTPMethod.h"
+#import "LoginParameters.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -20,6 +21,8 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @implementation APIClientService
+
+const NSString* baseURL = @"http://localhost:1440/api/v1/";
 
 + (instancetype) sharedInstance {
     static APIClientService* shared;
@@ -46,7 +49,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) createPost:(NSString*) title
        withPostBody: (NSString*) body
         withCompletionHandler:(ErrorPronePostCompletionHandler) completion {
-    NSURL* url = [[NSURL alloc] initWithString:@"http://localhost:1337/post"];
+    NSString* urlString = [baseURL stringByAppendingString:@"post"];
+    NSURL* url = [[NSURL alloc] initWithString:urlString];
     
     if (url) {
         if (_session) {
@@ -109,7 +113,11 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 - (void)fetchPosts:(FetchPostsCompletionHandler)completion {
-    NSURL* url = [[NSURL alloc] initWithString:@"http://localhost:1337/posts"];
+    NSString* urlString = [baseURL stringByAppendingString:@"home"];
+    NSURL* url = [[NSURL alloc] initWithString:urlString];
+    
+    NSMutableURLRequest* urlRequest = [[NSMutableURLRequest alloc] initWithURL:url];
+    [urlRequest setValue:@"application/json" forHTTPHeaderField:@"Content-type"];
     
     if (url) {
         if (_session) {
@@ -169,7 +177,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)deletePostWithPostId:(NSInteger) postId withCompletionHandler:(ErrorPronePostCompletionHandler) completion; {
     NSNumber* postIdNumber = [[NSNumber alloc] initWithInteger:postId];
     NSString* postIdString = postIdNumber.stringValue;
-    NSString* urlString = [@"http://localhost:1337/post/" stringByAppendingString:postIdString];
+    NSString* urlString = [[baseURL stringByAppendingString:@"post/"] stringByAppendingString:postIdString];
     
     NSURL* url = [[NSURL alloc] initWithString:urlString];
     
@@ -194,6 +202,67 @@ NS_ASSUME_NONNULL_BEGIN
                     NSString* logMessage = [@"Post with id" stringByAppendingString:postIdString];
                     NSLog(@"%@", logMessage);
                     
+                    return dispatch_async(dispatch_get_main_queue(), ^{
+                        completion(nil);
+                    });
+                } else {
+                    NSError *error = [self configureErrorWithCode:APICodeCorruptDataResponse inDomain:APIClientErrorDomain];
+                    return dispatch_async(dispatch_get_main_queue(), ^{
+                        completion(error);
+                    });
+                }
+            } else {
+                NSError *error = [self configureErrorWithCode:APICodeInvalidResponse inDomain:APIClientErrorDomain];
+                return dispatch_async(dispatch_get_main_queue(), ^{
+                    completion(error);
+                });
+            }
+        }];
+        
+        [task resume];
+    } else {
+        NSError* error = [self configureErrorWithCode:APICodeInvalidURL inDomain:APIClientErrorDomain];
+        return dispatch_async(dispatch_get_main_queue(), ^{
+            completion(error);
+        });
+    }
+}
+
+- (void)authenticateWithLoginParameters:(LoginParameters *)parameters withCompletionHandler:(ErrorPronePostCompletionHandler) completion; {
+    NSString* urlString = [baseURL stringByAppendingString:@"entrance/login"];
+    
+    NSURL* url = [[NSURL alloc] initWithString:urlString];
+    
+    if (url) {
+        NSMutableURLRequest* urlRequest = [[NSMutableURLRequest alloc] initWithURL:url];
+        urlRequest.HTTPMethod = (JRHTTPMethod) PUT;
+        NSDictionary* dict = @{
+            @"emailAddress": parameters.emailAddress,
+            @"password": parameters.password,
+        };
+        
+        NSError* jsonError;
+        NSData* data = [NSJSONSerialization dataWithJSONObject:dict options:NSJSONWritingFragmentsAllowed error:&jsonError];
+        
+        if (jsonError || ![data isKindOfClass:[NSData class]]) {
+            return dispatch_async(dispatch_get_main_queue(), ^{
+                completion(jsonError ?: [self configureErrorWithCode:APICodeDecodingFailed inDomain:APIClientErrorDomain]);
+            });
+        }
+        
+        NSURLSessionDataTask* task = [_session dataTaskWithRequest:urlRequest completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+            if (error) {
+                NSLog(@"@%@", error.localizedDescription);
+                
+                return dispatch_async(dispatch_get_main_queue(), ^{
+                    completion(error);
+                });
+            }
+            
+            NSHTTPURLResponse* __response = (NSHTTPURLResponse*) response;
+            
+            if (__response.statusCode == 200) {
+                if (data) {
                     return dispatch_async(dispatch_get_main_queue(), ^{
                         completion(nil);
                     });

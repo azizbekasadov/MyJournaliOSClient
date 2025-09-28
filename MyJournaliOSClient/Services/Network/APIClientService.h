@@ -8,6 +8,7 @@
 @import Foundation;
 
 @class Post;
+@class LoginParameters;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -23,7 +24,8 @@ typedef void (^ErrorPronePostCompletionHandler)(NSError* _Nullable error);
 
 - (void) fetchPosts:(FetchPostsCompletionHandler) completion;
 - (void) createPost:(NSString*) title withPostBody: (NSString*) body withCompletionHandler:(ErrorPronePostCompletionHandler) completion;
-- (void) deletePostWithPostId:(NSInteger) postId withCompletionHandler:(ErrorPronePostCompletionHandler) completion;;
+- (void) deletePostWithPostId:(NSInteger) postId withCompletionHandler:(ErrorPronePostCompletionHandler) completion;
+- (void) authenticateWithLoginParameters: (LoginParameters*) parameters withCompletionHandler:(ErrorPronePostCompletionHandler) completion;
 
 @end
 
